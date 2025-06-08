@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import pickle
 from ydata_profiling import ProfileReport
-from sklearn import type_of_target
+from sklearn.utils.multiclass import type_of_target
 import numpy as np
 from werkzeug.utils import secure_filename
 
