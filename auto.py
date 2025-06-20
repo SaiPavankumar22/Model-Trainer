@@ -2,19 +2,25 @@ from operator import index
 import streamlit as st
 import plotly.express as px
 from pycaret.regression import setup, compare_models, pull, save_model, load_model
-from ydata_profiling import ProfileReport
 import pandas as pd
-from streamlit_pandas_profiling import st_profile_report
 import os 
-from sklearn import type_of_target
+from sklearn.utils.multiclass import type_of_target
 
+# Try to import ydata_profiling with error handling
+try:
+    from ydata_profiling import ProfileReport
+    from streamlit_pandas_profiling import st_profile_report
+    PROFILING_AVAILABLE = True
+except ImportError as e:
+    st.error(f"ydata_profiling not available: {e}")
+    PROFILING_AVAILABLE = False
 
 if os.path.exists('./dataset.csv'): 
     df = pd.read_csv('dataset.csv', index_col=None)
 
 with st.sidebar: 
     st.image("https://www.onepointltd.com/wp-content/uploads/2020/03/inno2.png")
-    st.title("AutoNickML")
+    st.title("AutoML")
     choice = st.radio("Navigation", ["Upload","Profiling","Modelling", "Download"])
     st.info("This project application helps you build and explore your data.")
 
@@ -28,8 +34,22 @@ if choice == "Upload":
 
 if choice == "Profiling": 
     st.title("Exploratory Data Analysis")
-    profile = ProfileReport(df, title="Profiling Report", explorative=True)
-    st_profile_report(profile)
+    if PROFILING_AVAILABLE:
+        try:
+            profile = ProfileReport(df, title="Profiling Report", explorative=True)
+            st_profile_report(profile)
+        except Exception as e:
+            st.error(f"Error generating profile report: {e}")
+            st.info("Showing basic dataset information instead:")
+            st.write(f"Dataset shape: {df.shape}")
+            st.write("Dataset columns:", list(df.columns))
+            st.write("Missing values:", df.isnull().sum().to_dict())
+    else:
+        st.error("Profiling feature is not available due to missing dependencies.")
+        st.info("Showing basic dataset information instead:")
+        st.write(f"Dataset shape: {df.shape}")
+        st.write("Dataset columns:", list(df.columns))
+        st.write("Missing values:", df.isnull().sum().to_dict())
 
 if choice == "Modelling": 
     chosen_target = st.selectbox('Choose the Target Column', df.columns)
